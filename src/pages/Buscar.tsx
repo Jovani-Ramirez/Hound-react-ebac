@@ -11,26 +11,27 @@ import {
   Divider,
   Fade,
 } from "@mui/material";
+
 import SearchIcon from "@mui/icons-material/Search";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import PlaceIcon from "@mui/icons-material/Place";
 import EventIcon from "@mui/icons-material/Event";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
-import type { Guia } from "../models/Guia.interface";
 
+import type { Guia } from "../models/Guia.interface";
+import { useAppSelector } from "../hooks/guias";
 
 /* ================= COMPONENT ================= */
 
 export const Buscar = (): JSX.Element => {
   const [query, setQuery] = useState("");
-  const [result, setResult] = useState<Guia| null>(null);
+  const [result, setResult] = useState<Guia | null>(null);
   const [searched, setSearched] = useState(false);
 
-  const handleSearch = () => {
-    const stored = localStorage.getItem("guias");
-    const guias: Guia[] = stored ? JSON.parse(stored) : [];
+  const guias = useAppSelector((state) => state.guias.items);
 
+  const handleSearch = () => {
     const found = guias.find(
       (g) => g.numero.trim() === query.trim()
     );
@@ -154,10 +155,7 @@ export const Buscar = (): JSX.Element => {
                   <Divider />
 
                   {/* DETAILS */}
-                  <Stack
-                    direction={{ xs: "column", md: "row" }}
-                    spacing={4}
-                  >
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={4}>
                     <Detail
                       icon={<AssignmentTurnedInIcon />}
                       label="Destinatario"
@@ -202,10 +200,7 @@ export const Buscar = (): JSX.Element => {
                       Verifica el número o registra una nueva guía
                     </Typography>
 
-                    <Button
-                      variant="outlined"
-                      href="/registro"
-                    >
+                    <Button variant="outlined" href="/registro">
                       Registrar guía
                     </Button>
                   </Stack>

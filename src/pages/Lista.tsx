@@ -1,4 +1,4 @@
-import { useEffect, useState, type JSX } from "react";
+import { useState, type JSX } from "react";
 import {
   Box,
   Container,
@@ -28,13 +28,23 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import type { Guia } from "../models/Guia.interface";
 
+import { useAppDispatch, useAppSelector } from "../hooks/guias";
+import {
+  deleteGuia,
+  updateGuiaEstado,
+} from "../store/guiasSlice";
+import type { Guia } from "../models/Guia.interface";
 
 /* ================= COMPONENT ================= */
 
 export const Lista = (): JSX.Element => {
-  const [guias, setGuias] = useState<Guia[]>([]);
+  const dispatch = useAppDispatch();
+
+  /* 🔥 Redux state */
+  const guias = useAppSelector((state) => state.guias.items);
+
+  /* UI state */
   const [selected, setSelected] = useState<Guia | null>(null);
   const [estado, setEstado] = useState("");
 
@@ -43,18 +53,6 @@ export const Lista = (): JSX.Element => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [success, setSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-
-  /* ================= LOAD STORAGE ================= */
-
-  useEffect(() => {
-    const stored = localStorage.getItem("guias");
-    if (stored) setGuias(JSON.parse(stored));
-  }, []);
-
-  const updateStorage = (data: Guia[]) => {
-    localStorage.setItem("guias", JSON.stringify(data));
-    setGuias(data);
-  };
 
   /* ================= ACTIONS ================= */
 
@@ -67,22 +65,24 @@ export const Lista = (): JSX.Element => {
   const saveEdit = () => {
     if (!selected) return;
 
-    const updated = guias.map((g) =>
-      g.numero === selected.numero ? { ...g, estado } : g
+    dispatch(
+      updateGuiaEstado({
+        numero: selected.numero,
+        estado,
+      })
     );
 
-    updateStorage(updated);
     setEditDialog(false);
     setConfirmEdit(false);
     setSuccessMsg("Estado actualizado correctamente");
     setSuccess(true);
   };
 
-  const deleteGuia = () => {
+  const handleDelete = () => {
     if (!selected) return;
 
-    const filtered = guias.filter((g) => g.numero !== selected.numero);
-    updateStorage(filtered);
+    dispatch(deleteGuia(selected.numero));
+
     setConfirmDelete(false);
     setSuccessMsg("Guía eliminada correctamente");
     setSuccess(true);
@@ -204,10 +204,7 @@ export const Lista = (): JSX.Element => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialog(false)}>Cancelar</Button>
-          <Button
-            variant="contained"
-            onClick={() => setConfirmEdit(true)}
-          >
+          <Button variant="contained" onClick={() => setConfirmEdit(true)}>
             Guardar
           </Button>
         </DialogActions>
@@ -228,7 +225,7 @@ export const Lista = (): JSX.Element => {
         subtitle="Esta acción no se puede deshacer"
         danger
         onCancel={() => setConfirmDelete(false)}
-        onConfirm={deleteGuia}
+        onConfirm={handleDelete}
       />
 
       {/* ================= SUCCESS ================= */}
@@ -239,8 +236,7 @@ export const Lista = (): JSX.Element => {
               width: 80,
               height: 80,
               borderRadius: "50%",
-              background:
-                "linear-gradient(135deg, #22c55e, #16a34a)",
+              background: "linear-gradient(135deg, #22c55e, #16a34a)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

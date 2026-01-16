@@ -26,15 +26,22 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
+
 import type { Guia } from "../models/Guia.interface";
+import { useAppDispatch } from "../hooks/guias";
+import { addGuia } from "../store/guiasSlice";
 
 /* ================= COMPONENT ================= */
 
 export default function Registro(): JSX.Element {
+  const dispatch = useAppDispatch();
+
   const [fecha, setFecha] = useState<Dayjs | null>(dayjs());
   const [openAlert, setOpenAlert] = useState(false);
   const [copied, setCopied] = useState(false);
   const [guiaRegistrada, setGuiaRegistrada] = useState("");
+
+  /* ================= SUBMIT ================= */
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,14 +50,15 @@ export default function Registro(): JSX.Element {
     const data = Object.fromEntries(formData.entries());
 
     const nuevaGuia: Guia = {
-      ...(data as any),
+      numero: data.numero as string,
+      origen: data.origen as string,
+      destino: data.destino as string,
+      destinatario: data.destinatario as string,
+      estado: data.estado as string,
       fecha: fecha ? fecha.format("YYYY-MM-DD") : "",
     };
 
-    const stored = localStorage.getItem("guias");
-    const guias: Guia[] = stored ? JSON.parse(stored) : [];
-
-    localStorage.setItem("guias", JSON.stringify([...guias, nuevaGuia]));
+    dispatch(addGuia(nuevaGuia));
 
     setGuiaRegistrada(nuevaGuia.numero);
     setOpenAlert(true);
@@ -58,7 +66,6 @@ export default function Registro(): JSX.Element {
     e.currentTarget.reset();
     setFecha(dayjs());
 
-    // Auto close modal
     setTimeout(() => {
       setOpenAlert(false);
     }, 4000);
@@ -68,6 +75,8 @@ export default function Registro(): JSX.Element {
     await navigator.clipboard.writeText(guiaRegistrada);
     setCopied(true);
   };
+
+  /* ================= UI ================= */
 
   return (
     <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f7fa" }}>
